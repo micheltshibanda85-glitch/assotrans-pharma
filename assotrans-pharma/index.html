@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASSOTRANS PHARMA - Gestion de Stock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ÉCRAN DE CONNEXION -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="logo-area" style="justify-content: center; margin-bottom: 2rem;">
+      <div class="logo-icon">
+        <div class="pill-red"></div>
+        <div class="pill-white"></div>
+        <div class="cross">+</div>
+      </div>
+      <div class="logo-text">
+        <h1>ASSOTRANS</h1>
+        <h2>PHARMA</h2>
+      </div>
+    </div>
+    <h2>Accès Sécurisé</h2>
+    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Veuillez vous identifier pour accéder à l'inventaire.</p>
+    
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">Identifiant</label>
+        <select id="username" required>
+          <option value="">-- Choisir --</option>
+          <option value="admin">Administrateur (Pharmacien)</option>
+          <option value="superviseur">Superviseur</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+      <p id="login-error" style="color: var(--red); font-size: 0.85rem; display: none; margin-bottom: 1rem; font-weight: 600;">Identifiant ou mot de passe incorrect.</p>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+<!-- CONTENU DU SITE (Caché au début) -->
+<div id="app-content" style="display: none;">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <!-- Logo recréé en CSS -->
+        <div class="logo-icon">
+          <div class="pill-red"></div>
+          <div class="pill-white"></div>
+          <div class="cross">+</div>
+        </div>
+        <div class="logo-text">
+          <h1>ASSOTRANS</h1>
+          <h2>PHARMA</h2>
+          <p>Santé • Qualité • Confiance</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="export-btn" class="btn btn-outline">📥 Exporter (CSV)</button>
+        <button id="add-btn" class="btn btn-primary">+ Nouveau Médicament</button>
+        <button id="logout-btn" class="btn btn-outline" style="border-color: var(--red); color: var(--red);">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <!-- DASHBOARD (KPIs) -->
+    <section class="dashboard">
+      <div class="kpi-card">
+        <span class="kpi-icon">💊</span>
+        <div class="kpi-info">
+          <h3>Total Références</h3>
+          <p id="kpi-total">0</p>
+        </div>
+      </div>
+      <div class="kpi-card kpi-warning">
+        <span class="kpi-icon">⚠️</span>
+        <div class="kpi-info">
+          <h3>Stock Faible (< 10)</h3>
+          <p id="kpi-low-stock">0</p>
+        </div>
+      </div>
+      <div class="kpi-card kpi-danger">
+        <span class="kpi-icon">📅</span>
+        <div class="kpi-info">
+          <h3>Péremption Proche</h3>
+          <p id="kpi-expiring">0</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLEAU PRINCIPAL -->
+    <section class="table-section">
+      <div class="table-header">
+        <h2>Fiche d'Inventaire</h2>
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Rechercher un médicament (DCI)...">
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table id="inventory-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Libellé du médicament (DCI)</th>
+              <th>Forme galénique</th>
+              <th>Prix unitaire (FC)</th>
+              <th>Qté initiale</th>
+              <th>Qté actuelle</th>
+              <th>Date de péremption</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Les lignes seront générées par JS -->
+          </tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty-state" style="display: none;">
+        <p>Aucun médicament dans l'inventaire. Cliquez sur "+ Nouveau Médicament" pour commencer.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL AJOUT / MODIFICATION -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Ajouter un médicament</h2>
+        <button class="close-btn" id="close-modal">&times;</button>
+      </div>
+      <form id="med-form">
+        <input type="hidden" id="med-id">
+        
+        <div class="form-group">
+          <label for="med-name">Libellé (DCI / Nom commercial) *</label>
+          <input type="text" id="med-name" required placeholder="Ex: Paracétamol 500mg">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="med-form">Forme galénique *</label>
+            <select id="med-form" required>
+              <option value="Comprimé">Comprimé</option>
+              <option value="Sirop">Sirop</option>
+              <option value="Injection">Injection</option>
+              <option value="Pommade">Pommade</option>
+              <option value="Gélule">Gélule</option>
+              <option value="Suppositoire">Suppositoire</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="med-price">Prix unitaire (FC) *</label>
+            <input type="number" id="med-price" required min="0" step="50" placeholder="Ex: 1500">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="med-qty-init">Qté initiale *</label>
+            <input type="number" id="med-qty-init" required min="0" placeholder="Ex: 100">
+          </div>
+          <div class="form-group">
+            <label for="med-qty-act">Qté actuelle *</label>
+            <input type="number" id="med-qty-act" required min="0" placeholder="Ex: 100">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="med-expiry">Date de péremption *</label>
+          <input type="date" id="med-expiry" required>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-btn">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+ </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
